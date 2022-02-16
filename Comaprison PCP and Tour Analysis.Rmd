@@ -1,0 +1,76 @@
+---
+title: "Comparative Analysis on Tour and PCP"
+author: "Denise Bradford"
+date: "2/15/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tourr)
+library(spinifex)
+library(geozoo)
+library(palmerpenguins)
+library(ggpcp)
+library(tidyverse)
+library(ochRe)
+library(gifski)
+library(ggplotlyExtra)
+
+penguins <- penguins %>% filter(!is.na(bill_length_mm))
+
+```
+
+## Using the Parallel Coordinate Plots (PCP) by Hieke Hofmann
+
+```{r ggpcp}
+penguins %>%
+  pcp_select(species, 2:7, species) %>%
+  pcp_scale(method="uniminmax") %>%
+  pcp_arrange() %>%
+  ggplot(aes_pcp()) + 
+    geom_pcp_axes() + 
+    geom_pcp(aes(colour = species)) 
+```
+
+## Using Tourr by Di Cook 
+
+```{r tourr}
+ggplot(penguins, 
+   aes(x=flipper_length_mm, 
+       y=body_mass_g,
+       colour=species,
+       shape=species)) +
+  geom_point(alpha=0.7, 
+             size=2) +
+  scale_colour_ochre(
+    palette="nolan_ned") + 
+  theme(aspect.ratio=1,
+  legend.position="bottom")
+
+
+ggplot(penguins, 
+   aes(x=bill_length_mm, 
+       y=body_mass_g,
+       colour=species,
+       shape=species)) +
+  geom_point(alpha=0.7, 
+             size=2) +
+  scale_colour_ochre(
+    palette="nolan_ned") + 
+  theme(aspect.ratio=1,
+  legend.position="bottom")
+
+#Can't be ran in the knit as is, but will run in an html format
+clrs <- ochre_pal(
+  palette="nolan_ned")(3)
+col <- clrs[
+  as.numeric(
+    penguins$species)]
+animate_xy(penguins[,3:6], 
+           col=col, 
+           axes="off", 
+           fps=15)
+```
+
+
