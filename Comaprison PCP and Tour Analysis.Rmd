@@ -7,6 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#devtools::install_github("ropenscilabs/ochRe")
+#remotes::install_github("casperhart/detourr")
 library(tourr)
 library(spinifex)
 library(geozoo)
@@ -16,12 +18,31 @@ library(tidyverse)
 library(ochRe)
 library(gifski)
 library(ggplotlyExtra)
+library(detourr)
+library(viridis)
 
 penguins <- penguins %>% filter(!is.na(bill_length_mm))
 
 ```
 
 ## Using the Parallel Coordinate Plots (PCP) by Hieke Hofmann
+
+The package ggpcp version versus the ggparallel package gives the user the ability to look at variables that are categorical. 
+
+\begin{itemize}
+\item{Pros}
+  \begin{itemize}
+  \item{High Dimensional Data Visualization}
+  \item{Linear Dependences are easy to perceive trends}
+  \item{Axes order can be changed to check out trends between two axes}
+  \end{itemize}
+\item{Cons}
+  \begin{itemize}
+  \item{Overlaying of data lines for common data values}
+  \item{Level of clutter present in the visualization}
+  \end{itemize}
+\end{itemize}
+
 
 ```{r ggpcp}
 penguins %>%
@@ -30,11 +51,18 @@ penguins %>%
   pcp_arrange() %>%
   ggplot(aes_pcp()) + 
     geom_pcp_axes() + 
-    geom_pcp(aes(colour = species)) 
+    geom_pcp(aes(colour = species)) + 
+    geom_pcp_boxes(stat = "identity", boxwidth = 0.75, color = 'red') +
+    scale_color_viridis(discrete = TRUE) + theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=0.5))
+
 ```
 
 ## Using Tourr by Di Cook 
-
+\begin{itemize}
+\item{}
+\item{}
+\end{itemize}
 ```{r tourr}
 ggplot(penguins, 
    aes(x=flipper_length_mm, 
@@ -73,4 +101,37 @@ animate_xy(penguins[,3:6],
            fps=15)
 ```
 
+## Using Detourr Package
+
+```{r detourr}
+
+pcs <- penguins %>%
+  select(-species, -island,-sex) %>%
+  prcomp()
+
+pcs <- as_tibble(pcs$x) %>%
+  select(PC1:PC5)
+
+plot_data <- penguins %>%
+  select(-(bill_length_mm:body_mass_g), -year) %>%
+  bind_cols(pcs)
+
+
+set.seed(1)
+
+animate_tour(
+  plot_data,
+  cols = starts_with("PC"),
+  grand_tour(2),
+  display_scatter(tour_aes(
+    colour = species,
+    label = c(species, sex, island)
+  ),
+  axes = FALSE,
+  size = 0.5,
+  alpha = 0.7
+  )
+)
+
+```
 
